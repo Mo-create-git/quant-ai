@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QUANT-AI | Results Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: { "primary": "#0da2e7", "primary-dark": "#0b8ecf" },
+        fontFamily: { "sans": ["Outfit", "sans-serif"], "mono": ["IBM Plex Mono", "monospace"] }
+      }
+    }
+  }
+</script>
+<style>
+  body { font-family: 'Outfit', sans-serif; }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-thumb { background: #0da2e7; border-radius: 99px; }
+
+  /* Animations */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+  .fade-up   { animation: fadeUp 0.5s ease both; }
+  .fade-up-1 { animation: fadeUp 0.5s ease 0.1s both; }
+  .fade-up-2 { animation: fadeUp 0.5s ease 0.2s both; }
+  .fade-up-3 { animation: fadeUp 0.5s ease 0.3s both; }
+
+  /* Stat card hover */
+  .stat-card { transition: box-shadow 0.2s, transform 0.2s; }
+  .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.07); }
+  .dark .stat-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+
+  /* Insight card */
+  .insight-card { transition: transform 0.15s; }
+  .insight-card:hover { transform: translateX(4px); }
+
+  /* Tab pill */
+  .tab-pill { transition: all 0.2s; }
+
+  /* Data table */
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th {
+    padding: 10px 14px; text-align: left;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .data-table td {
+    padding: 11px 14px; font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  .pulse { animation: pulse 2s ease-in-out infinite; }
+</style>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 transition-colors duration-200">
+
+<!-- TOPBAR -->
+<header class="fixed top-0 w-full z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 shadow-sm">
+  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-3">
+      <div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white shadow shadow-primary/30">
+        <span class="material-symbols-outlined text-xl">analytics</span>
+      </div>
+      <span class="text-lg font-black tracking-tighter text-slate-900 dark:text-white">QUANT-AI</span>
+    </a>
+
+    <nav class="hidden md:flex items-center gap-2 text-sm text-slate-400">
+      <a href="/upload" class="hover:text-primary transition-colors">Upload</a>
+      <span class="material-symbols-outlined text-base">chevron_right</span>
+      <span class="text-slate-600 dark:text-slate-300 font-medium">Results Dashboard</span>
+    </nav>
+
+    <div class="flex items-center gap-3">
+      <span id="user-name-results" class="mono text-xs text-slate-400 hidden sm:block"></span>
+      <button id="theme-toggle" class="size-9 flex items-center justify-center text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
+        <span class="material-symbols-outlined dark:hidden text-lg">light_mode</span>
+        <span class="material-symbols-outlined hidden dark:block text-lg">dark_mode</span>
+      </button>
+      <a href="/upload" class="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/15 text-primary font-semibold text-sm rounded-xl transition-colors">
+        <span class="material-symbols-outlined text-base">add</span>
+        New Analysis
+      </a>
+    </div>
+  </div>
+</header>
+
+<main class="pt-24 pb-16 px-4 sm:px-6 max-w-7xl mx-auto">
+
+  <!-- Empty state -->
+  <div id="no-data" class="hidden flex-col items-center justify-center min-h-[60vh] gap-5 text-center">
+    <div class="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
+      <span class="material-symbols-outlined text-slate-400 text-4xl">bar_chart_4_bars</span>
+    </div>
+    <div>
+      <h2 class="text-xl font-bold mb-2">No analysis results yet</h2>
+      <p class="text-slate-500 dark:text-slate-400 text-sm">Upload a dataset and run an AI model to see results here.</p>
+    </div>
+    <a href="/upload" class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-colors shadow-sm">
+      <span class="material-symbols-outlined text-base">upload_file</span>
+      Upload Dataset
+    </a>
+  </div>
+
+  <!-- Results -->
+  <div id="results-content" class="hidden">
+
+    <!-- Page header -->
+    <div class="mb-8 fade-up flex items-start justify-between flex-wrap gap-4">
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-2 h-2 rounded-full bg-green-500 pulse"></div>
+          <span class="mono text-xs font-semibold tracking-widest uppercase text-green-600 dark:text-green-400">Analysis Complete</span>
+        </div>
+        <h1 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white mb-1">Results Dashboard</h1>
+        <p id="subtitle" class="mono text-sm text-slate-400"></p>
+      </div>
+      <div id="model-badge" class="mono text-xs font-bold tracking-wider uppercase px-4 py-2 rounded-xl border"></div>
+    </div>
+
+    <!-- Stat cards -->
+    <div id="stat-cards" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 fade-up-1"></div>
+
+
+    <!-- Model Metrics Panel -->
+    <div id="metrics-panel" class="hidden mb-7 fade-up-2">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary text-lg">monitoring</span>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 dark:text-white">Model Evaluation Metrics</h3>
+            <p class="mono text-xs text-slate-400">How well the AI model performed on your data</p>
+          </div>
+        </div>
+        <div id="metrics-content" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5"></div>
+        <div id="confusion-matrix-wrap" class="hidden">
+          <p class="mono text-xs font-bold tracking-widest uppercase text-slate-400 mb-3">Confusion Matrix</p>
+          <div id="confusion-matrix" class="inline-block"></div>
+          <p class="text-xs text-slate-400 mt-3 max-w-lg">The confusion matrix shows how many predictions were correct. <strong class="text-green-600">True Positives/Negatives</strong> (diagonal) = correct. <strong class="text-red-500">False Positives/Negatives</strong> (off-diagonal) = errors.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex items-center gap-2 mb-7 flex-wrap fade-up-2">
+      <button class="tab-pill px-4 py-2 rounded-full text-sm font-semibold border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600 flex items-center gap-2" id="tab-btn-churn" onclick="showTab('churn', this)">
+        <span class="w-2 h-2 rounded-full bg-red-400 inline-block"></span> Churn Prediction
+      </button>
+      <button class="tab-pill px-4 py-2 rounded-full text-sm font-semibold border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600 flex items-center gap-2" id="tab-btn-sales" onclick="showTab('sales', this)">
+        <span class="w-2 h-2 rounded-full bg-primary inline-block"></span> Sales Forecast
+      </button>
+      <button class="tab-pill px-4 py-2 rounded-full text-sm font-semibold border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600 flex items-center gap-2" id="tab-btn-anomaly" onclick="showTab('anomaly', this)">
+        <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span> Anomaly Detection
+      </button>
+    </div>
+
+    <!-- CHURN TAB -->
+    <div id="tab-churn" class="tab-content fade-up-3">
+      <div class="grid lg:grid-cols-2 gap-5 mb-5">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 stat-card">
+          <h3 class="font-bold text-slate-900 dark:text-white mb-1">Churn Risk Distribution</h3>
+          <p class="mono text-xs text-slate-400 mb-5">How your customers break down by predicted churn risk</p>
+          <canvas id="churn-pie" height="240"></canvas>
+        </div>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 stat-card">
+          <h3 class="font-bold text-slate-900 dark:text-white mb-1">Top Churn Drivers</h3>
+          <p class="mono text-xs text-slate-400 mb-5">Factors that most strongly predict a customer leaving</p>
+          <canvas id="churn-bar" height="240"></canvas>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary text-lg">psychology</span>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 dark:text-white">What This Means For Your Business</h3>
+            <p class="mono text-xs text-slate-400">Actionable takeaways from the AI model</p>
+          </div>
+        </div>
+        <div id="churn-insights" class="flex flex-col gap-3"></div>
+      </div>
+    </div>
+
+    <!-- SALES TAB -->
+    <div id="tab-sales" class="tab-content hidden fade-up-3">
+      <div class="grid lg:grid-cols-2 gap-5 mb-5">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 stat-card">
+          <h3 class="font-bold text-slate-900 dark:text-white mb-1">Sales Forecast — Next 6 Periods</h3>
+          <p class="mono text-xs text-slate-400 mb-5">Predicted revenue based on patterns in your historical data</p>
+          <canvas id="sales-line" height="240"></canvas>
+        </div>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 stat-card">
+          <h3 class="font-bold text-slate-900 dark:text-white mb-1">Revenue Drivers</h3>
+          <p class="mono text-xs text-slate-400 mb-5">Factors that most influence your sales performance</p>
+          <canvas id="sales-bar" height="240"></canvas>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary text-lg">psychology</span>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 dark:text-white">What This Means For Your Business</h3>
+            <p class="mono text-xs text-slate-400">Actionable takeaways from the AI model</p>
+          </div>
+        </div>
+        <div id="sales-insights" class="flex flex-col gap-3"></div>
+      </div>
+    </div>
+
+    <!-- ANOMALY TAB -->
+    <div id="tab-anomaly" class="tab-content hidden fade-up-3">
+      <div class="grid lg:grid-cols-2 gap-5 mb-5">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 stat-card">
+          <h3 class="font-bold text-slate-900 dark:text-white mb-1">Normal vs Anomalous Records</h3>
+          <p class="mono text-xs text-slate-400 mb-5">Proportion of clean vs flagged data points in your dataset</p>
+          <canvas id="anomaly-doughnut" height="240"></canvas>
+        </div>
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 stat-card">
+          <h3 class="font-bold text-slate-900 dark:text-white mb-1">Anomaly Hotspots</h3>
+          <p class="mono text-xs text-slate-400 mb-5">Which columns are contributing most to detected anomalies</p>
+          <canvas id="anomaly-bar" height="240"></canvas>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 mb-5">
+        <h3 class="font-bold text-slate-900 dark:text-white mb-1">Flagged Records</h3>
+        <p class="mono text-xs text-slate-400 mb-5">Top anomalous rows ranked by severity — investigate these first</p>
+        <div id="anomaly-table" class="overflow-x-auto"></div>
+      </div>
+      <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary text-lg">psychology</span>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900 dark:text-white">What This Means For Your Business</h3>
+            <p class="mono text-xs text-slate-400">Actionable takeaways from the AI model</p>
+          </div>
+        </div>
+        <div id="anomaly-insights" class="flex flex-col gap-3"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  // ── Dark mode (synced with project) ────────────
+  const html = document.documentElement;
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) html.classList.add('dark');
+  document.getElementById('theme-toggle').addEventListener('click', () => {
+    html.classList.toggle('dark');
+    localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+  });
+
+
+  // ── Render metrics panel ───────────────────────
+  function renderMetrics(r) {
+    const panel = document.getElementById('metrics-panel');
+    const content = document.getElementById('metrics-content');
+    const model = localStorage.getItem('quantai_model') || 'churn';
+    let metrics = [];
+
+    if (model === 'churn' && r.churn && !r.churn.error) {
+      const d = r.churn;
+      metrics = [
+        { label: 'Accuracy',  value: ((d.accuracy||0)*100).toFixed(1)+'%',  desc: 'Overall correct predictions',         color: 'text-green-600',  bg: 'bg-green-50 dark:bg-green-900/20'  },
+        { label: 'AUC-ROC',   value: d.auc_roc || '—',                       desc: 'Ability to distinguish classes',       color: 'text-primary',    bg: 'bg-primary/5'                      },
+        { label: 'F1 Score',  value: d.f1_score || '—',                       desc: 'Balance of precision & recall',        color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20'},
+        { label: 'Precision', value: d.precision || '—',                      desc: 'Correct positive predictions',         color: 'text-blue-500',   bg: 'bg-blue-50 dark:bg-blue-900/20'   },
+        { label: 'Recall',    value: d.recall || '—',                         desc: 'Actual positives caught',              color: 'text-amber-500',  bg: 'bg-amber-50 dark:bg-amber-900/20' },
+        { label: 'High Risk', value: d.high_risk_count,                       desc: 'Customers at risk of churning',        color: 'text-red-500',    bg: 'bg-red-50 dark:bg-red-900/20'     },
+      ];
+      // Confusion matrix
+      if (d.confusion_matrix) renderConfusionMatrix(d.confusion_matrix);
+    } else if (model === 'forecast' && r.sales && !r.sales.error) {
+      const d = r.sales;
+      metrics = [
+        { label: 'R² Score',     value: d.r2_score,    desc: 'Variance explained (1.0 = perfect)', color: 'text-green-600',  bg: 'bg-green-50 dark:bg-green-900/20'  },
+        { label: 'MAE',          value: d.mae,          desc: 'Mean absolute error',                color: 'text-primary',    bg: 'bg-primary/5'                      },
+        { label: 'RMSE',         value: d.rmse,         desc: 'Root mean squared error',            color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20'},
+        { label: 'MAPE',         value: (d.mape||'—')+'%', desc: 'Mean absolute % error',           color: 'text-amber-500',  bg: 'bg-amber-50 dark:bg-amber-900/20' },
+        { label: 'Train Score',  value: d.train_score,  desc: 'Fit on training data',               color: 'text-blue-500',   bg: 'bg-blue-50 dark:bg-blue-900/20'   },
+        { label: 'Test Score',   value: d.test_score,   desc: 'Fit on unseen data',                 color: 'text-green-600',  bg: 'bg-green-50 dark:bg-green-900/20' },
+      ];
+    } else if (model === 'anomaly' && r.anomaly && !r.anomaly.error) {
+      const d = r.anomaly;
+      metrics = [
+        { label: 'Total Rows',    value: d.total_rows?.toLocaleString(),        desc: 'Records analyzed',              color: 'text-primary',    bg: 'bg-primary/5'                      },
+        { label: 'Anomalies',     value: d.anomaly_count,                        desc: 'Flagged records',               color: 'text-red-500',    bg: 'bg-red-50 dark:bg-red-900/20'     },
+        { label: 'Normal',        value: d.normal_count?.toLocaleString(),       desc: 'Clean records',                 color: 'text-green-600',  bg: 'bg-green-50 dark:bg-green-900/20' },
+        { label: 'Anomaly Rate',  value: d.anomaly_rate_pct+'%',                 desc: '% of data flagged',             color: 'text-amber-500',  bg: 'bg-amber-50 dark:bg-amber-900/20' },
+        { label: 'Top Column',    value: d.column_contributions?.[0]?.column || '—', desc: 'Highest anomaly driver', color: 'text-purple-500', bg: 'bg-purple-50 dark:bg-purple-900/20'},
+        { label: 'Severity',      value: d.anomaly_rate_pct > 10 ? 'High' : d.anomaly_rate_pct > 5 ? 'Medium' : 'Low', desc: 'Overall anomaly severity', color: d.anomaly_rate_pct > 10 ? 'text-red-500' : 'text-amber-500', bg: d.anomaly_rate_pct > 10 ? 'bg-red-50 dark:bg-red-900/20' : 'bg-amber-50 dark:bg-amber-900/20' },
+      ];
+    }
+
+    if (metrics.length) {
+      panel.classList.remove('hidden');
+      content.innerHTML = metrics.map(m => `
+        <div class="${m.bg} rounded-xl p-4 border border-slate-100 dark:border-slate-700">
+          <p class="mono text-[10px] font-bold tracking-widest uppercase text-slate-400 mb-2">${m.label}</p>
+          <p class="text-2xl font-black ${m.color} tracking-tight">${m.value ?? '—'}</p>
+          <p class="mono text-[10px] text-slate-400 mt-1 leading-tight">${m.desc}</p>
+        </div>
+      `).join('');
+    }
+  }
+
+  function renderConfusionMatrix(cm) {
+    const wrap = document.getElementById('confusion-matrix-wrap');
+    const el   = document.getElementById('confusion-matrix');
+    wrap.classList.remove('hidden');
+    const labels = ['Predicted No', 'Predicted Yes'];
+    const rowLabels = ['Actual No', 'Actual Yes'];
+    const colors = [[
+      'bg-green-100 dark:bg-green-900/30 text-green-700',
+      'bg-red-100 dark:bg-red-900/30 text-red-600'
+    ],[
+      'bg-red-100 dark:bg-red-900/30 text-red-600',
+      'bg-green-100 dark:bg-green-900/30 text-green-700'
+    ]];
+    el.innerHTML = `
+      <table class="border-separate border-spacing-1">
+        <thead><tr>
+          <th class="w-24"></th>
+          ${labels.map(l => `<th class="mono text-[10px] font-bold text-slate-400 pb-2 text-center w-24">${l}</th>`).join('')}
+        </tr></thead>
+        <tbody>${cm.map((row, i) => `
+          <tr>
+            <td class="mono text-[10px] font-bold text-slate-400 pr-2 text-right">${rowLabels[i]}</td>
+            ${row.map((val, j) => `
+              <td class="w-24 h-16 rounded-xl ${colors[i][j]} text-center font-black text-xl">${val}</td>
+            `).join('')}
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  // ── User name ──────────────────────────────────
+  const userData = localStorage.getItem('quantai_user');
+  if (userData) {
+    try {
+      const user = JSON.parse(userData);
+      const el = document.getElementById('user-name-results');
+      if (el) el.textContent = user.first_name + ' ' + user.last_name;
+    } catch(e) {}
+  }
+
+  // ── Chart color helpers ────────────────────────
+  const isDark = () => document.documentElement.classList.contains('dark');
+  const textColor = () => isDark() ? '#94a3b8' : '#64748b';
+  const gridColor = () => isDark() ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+
+  Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+  Chart.defaults.font.size = 11;
+
+  // ── Load results ───────────────────────────────
+  const raw = localStorage.getItem('quantai_results');
+  const filename = localStorage.getItem('quantai_filename') || 'dataset';
+  const model = localStorage.getItem('quantai_model') || 'churn';
+
+  if (!raw) {
+    const nd = document.getElementById('no-data');
+    nd.classList.remove('hidden');
+    nd.style.display = 'flex';
+  } else {
+    const results = JSON.parse(raw);
+    document.getElementById('results-content').classList.remove('hidden');
+    document.getElementById('subtitle').textContent = filename;
+
+    // Model badge
+    const badge = document.getElementById('model-badge');
+    const badgeMap = {
+      churn:   { label: 'RandomForest · Churn',           color: 'text-red-500',   border: 'border-red-200 dark:border-red-800',   bg: 'bg-red-50 dark:bg-red-900/20'   },
+      forecast:{ label: 'GradientBoosting · Forecast',    color: 'text-primary',   border: 'border-primary/20',                    bg: 'bg-primary/5'                   },
+      anomaly: { label: 'IsolationForest · Anomaly',      color: 'text-amber-500', border: 'border-amber-200 dark:border-amber-800',bg: 'bg-amber-50 dark:bg-amber-900/20'},
+    };
+    const bm = badgeMap[model] || badgeMap.churn;
+    badge.className += ` ${bm.color} ${bm.border} ${bm.bg} mono text-xs font-bold tracking-wider uppercase px-4 py-2 rounded-xl border`;
+    badge.textContent = bm.label;
+
+    renderAll(results);
+
+    // Auto-switch tab
+    if (model === 'forecast') showTab('sales', document.getElementById('tab-btn-sales'));
+    else if (model === 'anomaly') showTab('anomaly', document.getElementById('tab-btn-anomaly'));
+    else showTab('churn', document.getElementById('tab-btn-churn'));
+  }
+
+  function renderAll(r) {
+    renderStatCards(r);
+    renderMetrics(r);
+    if (r.churn && !r.churn.error)     renderChurn(r.churn);
+    if (r.sales && !r.sales.error)     renderSales(r.sales);
+    if (r.anomaly && !r.anomaly.error) renderAnomaly(r.anomaly);
+  }
+
+  // ── Stat cards ─────────────────────────────────
+  function renderStatCards(r) {
+    const cards = [];
+    if (r.churn && !r.churn.error) {
+      const risk = r.churn.high_risk_count;
+      const total = risk + (r.churn.medium_risk_count||0) + (r.churn.low_risk_count||0);
+      const pct = total ? ((risk/total)*100).toFixed(0) : 0;
+      cards.push({ value: risk, label: 'High Churn Risk', sub: `${pct}% of total customers`, icon: 'person_off', iconColor: 'text-red-500', iconBg: 'bg-red-50 dark:bg-red-900/20' });
+      cards.push({ value: (r.churn.accuracy * 100).toFixed(1) + '%', label: 'Model Accuracy', sub: 'Prediction confidence score', icon: 'verified', iconColor: 'text-green-600', iconBg: 'bg-green-50 dark:bg-green-900/20' });
+    }
+    if (r.anomaly && !r.anomaly.error) {
+      cards.push({ value: r.anomaly.anomaly_count, label: 'Anomalies Found', sub: `Out of ${r.anomaly.total_rows} total rows`, icon: 'crisis_alert', iconColor: 'text-amber-500', iconBg: 'bg-amber-50 dark:bg-amber-900/20' });
+      cards.push({ value: r.anomaly.total_rows?.toLocaleString(), label: 'Total Records', sub: 'Rows analyzed by AI', icon: 'dataset', iconColor: 'text-primary', iconBg: 'bg-primary/5' });
+    }
+    if (r.sales && !r.sales.error && cards.length === 0) {
+      const f = r.sales.forecast_next_6 || [];
+      const avg = f.length ? (f.reduce((s,x) => s+x.forecast, 0)/f.length).toFixed(0) : '—';
+      cards.push({ value: avg, label: 'Avg Forecast', sub: 'Next 6 periods average', icon: 'trending_up', iconColor: 'text-primary', iconBg: 'bg-primary/5' });
+    }
+
+    document.getElementById('stat-cards').innerHTML = cards.map((c, i) => `
+      <div class="stat-card bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-9 h-9 ${c.iconBg} rounded-xl flex items-center justify-center">
+            <span class="material-symbols-outlined ${c.iconColor} text-xl">${c.icon}</span>
+          </div>
+          <span class="mono text-xs font-semibold text-slate-400 text-right leading-tight">${c.label}</span>
+        </div>
+        <div class="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">${c.value ?? '—'}</div>
+        <div class="mono text-xs text-slate-400">${c.sub}</div>
+      </div>
+    `).join('');
+  }
+
+  // ── Churn ──────────────────────────────────────
+  function renderChurn(d) {
+    Chart.defaults.color = textColor();
+    new Chart(document.getElementById('churn-pie'), {
+      type: 'doughnut',
+      data: {
+        labels: ['High Risk', 'Medium Risk', 'Low Risk'],
+        datasets: [{ data: [d.high_risk_count, d.medium_risk_count, d.low_risk_count],
+          backgroundColor: ['#f43f5e', '#f59e0b', '#10b981'],
+          borderWidth: 0, hoverOffset: 4 }]
+      },
+      options: { cutout: '68%', plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, pointStyleWidth: 8 } } } }
+    });
+
+    const feats = d.feature_importances?.slice(0,6) || [];
+    new Chart(document.getElementById('churn-bar'), {
+      type: 'bar',
+      data: {
+        labels: feats.map(f => f.feature),
+        datasets: [{ data: feats.map(f => f.importance),
+          backgroundColor: feats.map((_, i) => i === 0 ? '#f43f5e' : '#fca5a5'),
+          borderRadius: 5, borderSkipped: false }]
+      },
+      options: { indexAxis: 'y', plugins: { legend: { display: false } },
+        scales: { x: { beginAtZero: true, grid: { color: gridColor() }, border: { display: false } },
+                  y: { grid: { display: false }, border: { display: false } } } }
+    });
+
+    renderInsights('churn-insights', d.insights);
+  }
+
+  // ── Sales ──────────────────────────────────────
+  function renderSales(d) {
+    Chart.defaults.color = textColor();
+    const forecast = d.forecast_next_6 || [];
+    new Chart(document.getElementById('sales-line'), {
+      type: 'line',
+      data: {
+        labels: forecast.map(f => f.period),
+        datasets: [{ label: 'Forecast', data: forecast.map(f => f.forecast),
+          borderColor: '#0da2e7', backgroundColor: 'rgba(13,162,231,0.08)',
+          tension: 0.4, fill: true, pointRadius: 5,
+          pointBackgroundColor: '#0da2e7', pointBorderColor: isDark() ? '#0f172a' : '#fff', pointBorderWidth: 2 }]
+      },
+      options: { plugins: { legend: { display: false } },
+        scales: { x: { grid: { color: gridColor() }, border: { display: false } },
+                  y: { beginAtZero: false, grid: { color: gridColor() }, border: { display: false } } } }
+    });
+
+    const feats = d.feature_importances?.slice(0,6) || [];
+    new Chart(document.getElementById('sales-bar'), {
+      type: 'bar',
+      data: {
+        labels: feats.map(f => f.feature),
+        datasets: [{ data: feats.map(f => f.importance),
+          backgroundColor: feats.map((_, i) => i === 0 ? '#0da2e7' : '#93c5fd'),
+          borderRadius: 5, borderSkipped: false }]
+      },
+      options: { indexAxis: 'y', plugins: { legend: { display: false } },
+        scales: { x: { beginAtZero: true, grid: { color: gridColor() }, border: { display: false } },
+                  y: { grid: { display: false }, border: { display: false } } } }
+    });
+
+    renderInsights('sales-insights', d.insights);
+  }
+
+  // ── Anomaly ────────────────────────────────────
+  function renderAnomaly(d) {
+    Chart.defaults.color = textColor();
+    new Chart(document.getElementById('anomaly-doughnut'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Normal Records', 'Anomalous Records'],
+        datasets: [{ data: [d.normal_count, d.anomaly_count],
+          backgroundColor: ['#10b981', '#f43f5e'],
+          borderWidth: 0, hoverOffset: 4 }]
+      },
+      options: { cutout: '68%', plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } } } }
+    });
+
+    const contribs = d.column_contributions?.slice(0,6) || [];
+    new Chart(document.getElementById('anomaly-bar'), {
+      type: 'bar',
+      data: {
+        labels: contribs.map(c => c.column),
+        datasets: [{ data: contribs.map(c => c.contribution),
+          backgroundColor: contribs.map((_, i) => i === 0 ? '#f59e0b' : '#fcd34d'),
+          borderRadius: 5, borderSkipped: false }]
+      },
+      options: { indexAxis: 'y', plugins: { legend: { display: false } },
+        scales: { x: { beginAtZero: true, grid: { color: gridColor() }, border: { display: false } },
+                  y: { grid: { display: false }, border: { display: false } } } }
+    });
+
+    // Table
+    const top = d.top_anomalies?.slice(0,10) || [];
+    if (top.length) {
+      const cols = Object.keys(top[0].values || {});
+      const thClass = 'text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800';
+      const tdClass = 'text-slate-600 dark:text-slate-300 border-b border-slate-50 dark:border-slate-800/50';
+      document.getElementById('anomaly-table').innerHTML = `
+        <table class="data-table">
+          <thead><tr>
+            <th class="${thClass}">Row #</th>
+            <th class="${thClass}">Severity</th>
+            ${cols.map(c => `<th class="${thClass}">${c}</th>`).join('')}
+          </tr></thead>
+          <tbody>${top.map(r => {
+            const score = parseFloat(r.anomaly_score);
+            const sev = score > 0.8
+              ? 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 dark:bg-red-900/30 text-red-600'
+              : score > 0.6
+              ? 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-600'
+              : 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-600';
+            const label = score > 0.8 ? 'Critical' : score > 0.6 ? 'High' : 'Medium';
+            return `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+              <td class="${tdClass} font-bold text-slate-900 dark:text-white">#${r.row}</td>
+              <td class="${tdClass}"><span class="${sev}">${label}</span></td>
+              ${cols.map(c => `<td class="${tdClass}">${r.values[c] ?? '—'}</td>`).join('')}
+            </tr>`;
+          }).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    renderInsights('anomaly-insights', d.insights);
+  }
+
+  // ── Insights ───────────────────────────────────
+  function renderInsights(containerId, insights) {
+    if (!insights || !insights.length) {
+      document.getElementById(containerId).innerHTML = '<p class="text-sm text-slate-400">No insights generated.</p>';
+      return;
+    }
+    const configs = [
+      { icon: 'crisis_alert', tag: 'RISK',    cls: 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800',    icon_cls: 'text-red-500',   tag_cls: 'text-red-500'   },
+      { icon: 'lightbulb',    tag: 'INSIGHT', cls: 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800', icon_cls: 'text-amber-500', tag_cls: 'text-amber-500' },
+      { icon: 'task_alt',     tag: 'ACTION',  cls: 'bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-800', icon_cls: 'text-green-600', tag_cls: 'text-green-600' },
+    ];
+    document.getElementById(containerId).innerHTML = insights.map((ins, i) => {
+      const c = configs[i % configs.length];
+      return `
+        <div class="insight-card flex items-start gap-4 p-4 rounded-xl border ${c.cls}">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${c.cls}">
+            <span class="material-symbols-outlined ${c.icon_cls} text-lg">${c.icon}</span>
+          </div>
+          <div class="flex-1">
+            <span class="mono text-[10px] font-bold tracking-widest ${c.tag_cls} uppercase">${c.tag}</span>
+            <p class="text-sm text-slate-700 dark:text-slate-200 leading-relaxed mt-1">${ins}</p>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Tab switching ──────────────────────────────
+  function showTab(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => {
+      el.classList.add('hidden');
+    });
+    document.querySelectorAll('.tab-pill').forEach(b => {
+      b.classList.remove('bg-primary', 'text-white', 'border-primary');
+      b.classList.add('border-slate-200', 'dark:border-slate-700', 'text-slate-500', 'dark:text-slate-400');
+    });
+    const tab = document.getElementById('tab-' + name);
+    if (tab) tab.classList.remove('hidden');
+    if (btn) {
+      btn.classList.add('bg-primary', 'text-white', 'border-primary');
+      btn.classList.remove('border-slate-200', 'dark:border-slate-700', 'text-slate-500', 'dark:text-slate-400');
+    }
+  }
+</script>
+</body>
+</html>

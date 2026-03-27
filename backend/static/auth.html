@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QUANT-AI | Login & Sign Up</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: { "primary": "#0da2e7", "primary-dark": "#0b8ecf" },
+        fontFamily: { "sans": ["Inter", "sans-serif"], "mono": ["DM Mono", "monospace"] },
+      },
+    },
+  }
+</script>
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  .mono { font-family: 'DM Mono', monospace; }
+
+  /* Tab underline slide */
+  .tab-indicator {
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), width 0.3s ease;
+  }
+
+  /* Input focus ring */
+  .auth-input {
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .auth-input:focus {
+    outline: none;
+    border-color: #0da2e7;
+    box-shadow: 0 0 0 3px rgba(13,162,231,0.12);
+  }
+
+  /* Form page slide */
+  .form-page { transition: opacity 0.25s ease, transform 0.25s ease; }
+  .form-page.hidden-left  { opacity: 0; transform: translateX(-20px); pointer-events: none; position: absolute; }
+  .form-page.hidden-right { opacity: 0; transform: translateX(20px);  pointer-events: none; position: absolute; }
+
+  /* Floating blobs */
+  @keyframes blobFloat { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(30px,-20px) scale(1.05)} 66%{transform:translate(-20px,10px) scale(0.97)} }
+  .blob { animation: blobFloat 12s ease-in-out infinite; }
+  .blob2 { animation: blobFloat 16s ease-in-out infinite 4s reverse; }
+
+  /* Password strength bar */
+  .strength-bar { transition: width 0.4s ease, background-color 0.4s ease; }
+
+  /* Button loading */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { animation: spin 0.8s linear infinite; display: inline-block; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-thumb { background: #0da2e7; border-radius: 99px; }
+
+  /* Social button */
+  .social-btn {
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .social-btn:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+</style>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-950 min-h-screen flex items-stretch text-slate-800 dark:text-slate-100">
+
+<!-- ══════════ LEFT PANEL — Branding ══════════ -->
+<div class="hidden lg:flex lg:w-[46%] relative bg-slate-900 overflow-hidden flex-col justify-between p-12">
+
+  <!-- Animated blobs -->
+  <div class="blob absolute top-[-80px] left-[-80px] w-[420px] h-[420px] rounded-full bg-primary/20 blur-[90px]"></div>
+  <div class="blob2 absolute bottom-[-60px] right-[-60px] w-[360px] h-[360px] rounded-full bg-primary/10 blur-[80px]"></div>
+
+  <!-- Top: Logo -->
+  <a href="/" class="flex items-center gap-3 relative z-10">
+    <div class="size-9 bg-primary rounded-lg flex items-center justify-center text-white shadow-lg shadow-primary/40">
+      <span class="material-symbols-outlined text-xl">analytics</span>
+    </div>
+    <span class="text-xl font-black tracking-tighter text-white">QUANT-AI</span>
+  </a>
+
+  <!-- Middle: Headline + Stats -->
+  <div class="relative z-10 flex flex-col gap-8">
+    <div>
+      <h2 class="text-4xl font-black text-white leading-tight mb-4">
+        Your data.<br/>
+        <span class="text-primary">Supercharged.</span>
+      </h2>
+      <p class="text-slate-400 leading-relaxed text-sm max-w-xs">
+        Upload any business dataset and get AI-powered predictions, risk alerts, and actionable insights in minutes.
+      </p>
+    </div>
+
+    <!-- Mini stat cards -->
+    <div class="grid grid-cols-2 gap-3">
+      <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+        <p class="text-2xl font-black text-white">94%</p>
+        <p class="text-xs text-slate-400 mt-1 mono">Avg. model accuracy</p>
+      </div>
+      <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+        <p class="text-2xl font-black text-primary">2 min</p>
+        <p class="text-xs text-slate-400 mt-1 mono">First insight report</p>
+      </div>
+      <div class="bg-white/5 border border-white/10 rounded-xl p-4">
+        <p class="text-2xl font-black text-white">1GB</p>
+        <p class="text-xs text-slate-400 mt-1 mono">Max dataset size</p>
+      </div>
+      <div class="bg-primary/20 border border-primary/30 rounded-xl p-4">
+        <p class="text-2xl font-black text-primary">Free</p>
+        <p class="text-xs text-slate-400 mt-1 mono">No card needed</p>
+      </div>
+    </div>
+
+    <!-- Steps preview -->
+    <div class="flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center flex-shrink-0">
+          <span class="text-[10px] font-bold text-primary">1</span>
+        </div>
+        <span class="text-slate-300 text-sm">Create your free account</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center flex-shrink-0">
+          <span class="text-[10px] font-bold text-primary">2</span>
+        </div>
+        <span class="text-slate-300 text-sm">Upload your business dataset</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center flex-shrink-0">
+          <span class="text-[10px] font-bold text-primary">3</span>
+        </div>
+        <span class="text-slate-300 text-sm">Get AI predictions & insights</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom: Testimonial -->
+  <div class="relative z-10 bg-white/5 border border-white/10 rounded-2xl p-5">
+    <p class="text-slate-300 text-sm leading-relaxed italic mb-3">
+      "QUANT-AI predicted our Q3 churn 3 weeks early. We retained 40 accounts because of it."
+    </p>
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full bg-primary/30 flex items-center justify-center text-primary font-bold text-sm">S</div>
+      <div>
+        <p class="text-white text-xs font-semibold">Sarah Chen</p>
+        <p class="text-slate-500 text-[10px] mono">Head of Analytics, Nexus SaaS</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ RIGHT PANEL — Auth Form ══════════ -->
+<div class="flex-1 flex flex-col justify-center items-center px-6 py-12 relative">
+
+  <!-- Mobile logo -->
+  <a href="/" class="lg:hidden flex items-center gap-2 mb-10">
+    <div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+      <span class="material-symbols-outlined text-lg">analytics</span>
+    </div>
+    <span class="text-lg font-black text-slate-900 dark:text-white">QUANT-AI</span>
+  </a>
+
+  <div class="w-full max-w-md">
+
+    <!-- Tab switcher -->
+    <div class="relative flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1 mb-8">
+      <div id="tab-bg"
+        class="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-white dark:bg-slate-700 rounded-lg shadow-sm tab-indicator"></div>
+      <button id="tab-login" onclick="switchTab('login')"
+        class="relative z-10 flex-1 py-2.5 text-sm font-semibold rounded-lg transition-colors text-slate-900 dark:text-white">
+        Log In
+      </button>
+      <button id="tab-signup" onclick="switchTab('signup')"
+        class="relative z-10 flex-1 py-2.5 text-sm font-semibold rounded-lg transition-colors text-slate-500 dark:text-slate-400">
+        Create Account
+      </button>
+    </div>
+
+    <!-- ── LOGIN FORM ── -->
+    <div id="form-login" class="form-page">
+      <div class="mb-6">
+        <h1 class="text-2xl font-black text-slate-900 dark:text-white mb-1">Welcome back</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Log in to your QUANT-AI account</p>
+      </div>
+
+      <!-- Social login -->
+      <div class="grid grid-cols-2 gap-3 mb-6">
+        <button class="social-btn flex items-center justify-center gap-2 py-2.5 px-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
+          <svg class="w-4 h-4" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Google
+        </button>
+        <button class="social-btn flex items-center justify-center gap-2 py-2.5 px-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
+          <svg class="w-4 h-4 text-slate-800 dark:text-white fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </button>
+      </div>
+
+      <div class="flex items-center gap-3 mb-6">
+        <div class="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
+        <span class="text-xs text-slate-400 mono">or continue with email</span>
+        <div class="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Email</label>
+          <input type="email" id="login-email" placeholder="you@company.com" autocomplete="email"
+            class="auth-input w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm placeholder-slate-400"/>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Password</label>
+            <button class="text-xs text-primary hover:underline font-medium">Forgot password?</button>
+          </div>
+          <div class="relative">
+            <input id="login-pw" type="password" placeholder="••••••••" autocomplete="current-password"
+              class="auth-input w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm placeholder-slate-400"/>
+            <button onclick="togglePw('login-pw', this)" tabindex="-1"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors">
+              <span class="material-symbols-outlined text-lg">visibility</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="remember" class="w-4 h-4 rounded border-slate-300 accent-primary"/>
+          <label for="remember" class="text-sm text-slate-600 dark:text-slate-400">Remember me for 30 days</label>
+        </div>
+
+        <button onclick="handleLogin(this)" 
+          class="w-full py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-lg">login</span>
+          Log In to QUANT-AI
+        </button>
+      </div>
+
+      <p class="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
+        Don't have an account?
+        <button onclick="switchTab('signup')" class="text-primary font-semibold hover:underline ml-1">Sign up free</button>
+      </p>
+    </div>
+
+    <!-- ── SIGNUP FORM ── -->
+    <div id="form-signup" class="form-page hidden-right" style="position:relative;">
+      <div class="mb-6">
+        <h1 class="text-2xl font-black text-slate-900 dark:text-white mb-1">Create your account</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Start analyzing your data for free</p>
+      </div>
+
+      <!-- Social signup -->
+      <div class="grid grid-cols-2 gap-3 mb-6">
+        <button class="social-btn flex items-center justify-center gap-2 py-2.5 px-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
+          <svg class="w-4 h-4" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Google
+        </button>
+        <button class="social-btn flex items-center justify-center gap-2 py-2.5 px-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
+          <svg class="w-4 h-4 fill-current text-slate-800 dark:text-white" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </button>
+      </div>
+
+      <div class="flex items-center gap-3 mb-6">
+        <div class="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
+        <span class="text-xs text-slate-400 mono">or sign up with email</span>
+        <div class="flex-1 h-px bg-slate-200 dark:bg-slate-700"></div>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">First name</label>
+            <input type="text" id="signup-firstname" placeholder="Alex" autocomplete="given-name"
+              class="auth-input w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm placeholder-slate-400"/>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Last name</label>
+            <input type="text" id="signup-lastname" placeholder="Rivera" autocomplete="family-name"
+              class="auth-input w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm placeholder-slate-400"/>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Work email</label>
+          <input type="email" id="signup-email" placeholder="you@company.com" autocomplete="email"
+            class="auth-input w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm placeholder-slate-400"/>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Password</label>
+          <div class="relative">
+            <input id="signup-pw" type="password" placeholder="Min. 8 characters" autocomplete="new-password"
+              oninput="checkStrength(this.value)"
+              class="auth-input w-full px-4 py-3 pr-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm placeholder-slate-400"/>
+            <button onclick="togglePw('signup-pw', this)" tabindex="-1"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors">
+              <span class="material-symbols-outlined text-lg">visibility</span>
+            </button>
+          </div>
+          <!-- Strength meter -->
+          <div class="mt-2 h-1 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div id="strength-bar" class="strength-bar h-full rounded-full w-0 bg-slate-300"></div>
+          </div>
+          <p id="strength-label" class="text-[11px] mono text-slate-400 mt-1"></p>
+        </div>
+
+        <div class="flex items-start gap-2.5 mt-1">
+          <input type="checkbox" id="terms" class="w-4 h-4 mt-0.5 rounded border-slate-300 accent-primary flex-shrink-0"/>
+          <label for="terms" class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+            I agree to QUANT-AI's
+            <a href="#" class="text-primary hover:underline">Terms of Service</a> and
+            <a href="#" class="text-primary hover:underline">Privacy Policy</a>
+          </label>
+        </div>
+
+        <button onclick="handleSignup(this)"
+          class="w-full py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-lg">person_add</span>
+          Create Free Account
+        </button>
+      </div>
+
+      <p class="text-center text-sm text-slate-500 dark:text-slate-400 mt-6">
+        Already have an account?
+        <button onclick="switchTab('login')" class="text-primary font-semibold hover:underline ml-1">Log in</button>
+      </p>
+    </div>
+
+    <!-- Back to landing -->
+    <div class="mt-8 text-center">
+      <a href="/" class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+        <span class="material-symbols-outlined text-base">arrow_back</span>
+        Back to QUANT-AI
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── Tab switching ──────────────────────────────
+  let currentTab = 'login';
+  function switchTab(tab) {
+    if (tab === currentTab) return;
+    const loginForm  = document.getElementById('form-login');
+    const signupForm = document.getElementById('form-signup');
+    const tabBg      = document.getElementById('tab-bg');
+    const tabLogin   = document.getElementById('tab-login');
+    const tabSignup  = document.getElementById('tab-signup');
+
+    if (tab === 'signup') {
+      loginForm.classList.add('hidden-left');
+      loginForm.style.position = 'absolute';
+      signupForm.classList.remove('hidden-right');
+      signupForm.style.position = 'relative';
+      tabBg.style.transform = 'translateX(100%)';
+      tabLogin.classList.replace('text-slate-900','text-slate-500');
+      tabLogin.classList.replace('dark:text-white','dark:text-slate-400');
+      tabSignup.classList.remove('text-slate-500','dark:text-slate-400');
+      tabSignup.classList.add('text-slate-900','dark:text-white');
+    } else {
+      signupForm.classList.add('hidden-right');
+      signupForm.style.position = 'absolute';
+      loginForm.classList.remove('hidden-left');
+      loginForm.style.position = 'relative';
+      tabBg.style.transform = 'translateX(0)';
+      tabSignup.classList.replace('text-slate-900','text-slate-500');
+      tabSignup.classList.replace('dark:text-white','dark:text-slate-400');
+      tabLogin.classList.remove('text-slate-500','dark:text-slate-400');
+      tabLogin.classList.add('text-slate-900','dark:text-white');
+    }
+    currentTab = tab;
+  }
+
+  // ── Password toggle ─────────────────────────────
+  function togglePw(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon  = btn.querySelector('.material-symbols-outlined');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.textContent = 'visibility_off';
+    } else {
+      input.type = 'password';
+      icon.textContent = 'visibility';
+    }
+  }
+
+  // ── Password strength ───────────────────────────
+  function checkStrength(val) {
+    const bar   = document.getElementById('strength-bar');
+    const label = document.getElementById('strength-label');
+    let score = 0;
+    if (val.length >= 8)  score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const levels = [
+      { w: '0%',   color: 'bg-slate-300', text: '' },
+      { w: '25%',  color: 'bg-red-400',   text: 'Weak' },
+      { w: '50%',  color: 'bg-amber-400', text: 'Fair' },
+      { w: '75%',  color: 'bg-yellow-400',text: 'Good' },
+      { w: '100%', color: 'bg-green-500', text: 'Strong ✓' },
+    ];
+    const l = levels[score];
+    bar.style.width = l.w;
+    bar.className = `strength-bar h-full rounded-full ${l.color}`;
+    label.textContent = l.text;
+    label.className = `text-[11px] mono mt-1 ${score >= 3 ? 'text-green-500' : score >= 2 ? 'text-amber-500' : 'text-red-400'}`;
+  }
+
+  // ── Login submit ────────────────────────────────
+  async function handleLogin(btn) {
+    const email    = document.getElementById("login-email").value.trim();
+    const password = document.getElementById('login-pw').value;
+    if (!email || !password) { showToast('Please fill in all fields.', 'error'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin material-symbols-outlined text-lg">progress_activity</span> Logging in...';
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Login failed');
+      localStorage.setItem('quantai_user', JSON.stringify(data.user));
+      showToast('Welcome back, ' + data.user.first_name + '!', 'success');
+      setTimeout(() => { window.location.href = '/upload'; }, 800);
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = '<span class="material-symbols-outlined text-lg">login</span> Log In to QUANT-AI';
+      showToast(err.message, 'error');
+    }
+  }
+
+  // ── Signup submit ───────────────────────────────
+  async function handleSignup(btn) {
+    const first_name = document.getElementById('signup-firstname').value.trim();
+    const last_name  = document.getElementById('signup-lastname').value.trim();
+    const email      = document.getElementById('signup-email').value.trim();
+    const password   = document.getElementById('signup-pw').value;
+    const terms      = document.getElementById('terms').checked;
+
+    if (!first_name || !last_name || !email || !password) { showToast('Please fill in all fields.', 'error'); return; }
+    if (!terms) { showToast('Please accept the Terms of Service.', 'error'); return; }
+    if (password.length < 8) { showToast('Password must be at least 8 characters.', 'error'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin material-symbols-outlined text-lg">progress_activity</span> Creating account...';
+
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ first_name, last_name, email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Signup failed');
+      localStorage.setItem('quantai_user', JSON.stringify(data.user));
+      showToast('Account created! Welcome, ' + data.user.first_name + '!', 'success');
+      setTimeout(() => { window.location.href = '/upload'; }, 800);
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = '<span class="material-symbols-outlined text-lg">person_add</span> Create Free Account';
+      showToast(err.message, 'error');
+    }
+  }
+
+  // ── Toast ───────────────────────────────────────
+  function showToast(msg, type) {
+    const existing = document.getElementById('auth-toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.id = 'auth-toast';
+    const bg = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+    const icon = type === 'success' ? 'check_circle' : 'error';
+    toast.className = `fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] ${bg} text-white px-6 py-3 rounded-2xl shadow-xl font-semibold text-sm flex items-center gap-2`;
+    toast.innerHTML = `<span class="material-symbols-outlined text-lg">${icon}</span>${msg}`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+  }
+
+  // ── Dark mode ───────────────────────────────────
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.classList.add('dark');
+  }
+</script>
+</body>
+</html>

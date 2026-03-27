@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>QUANT-AI | Predictive Analytics Platform</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "primary": "#0da2e7",
+          "primary-dark": "#0b8ecf",
+        },
+        fontFamily: {
+          "display": ["Inter", "sans-serif"],
+          "body": ["Inter", "sans-serif"],
+          "mono": ["DM Mono", "monospace"],
+        },
+      },
+    },
+  }
+</script>
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  h1, h2, h3, h4, h5, .font-display { font-family: 'Inter', sans-serif; }
+  .mono { font-family: 'DM Mono', monospace; font-size: 0.85em; }
+
+  .glass {
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(13,162,231,0.12);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .dark .glass {
+    background: rgba(15,23,42,0.88);
+    border: 1px solid rgba(13,162,231,0.18);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  }
+  /* Feature cards hover lift */
+  .feature-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(13,162,231,0.12);
+  }
+  .glow-border {
+    position: relative;
+  }
+  .glow-border::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: linear-gradient(45deg, transparent, rgba(13,162,231,0.18), transparent);
+    border-radius: inherit;
+    z-index: -1;
+  }
+
+  /* Animated ping dot */
+  @keyframes ping { 75%,100%{transform:scale(2);opacity:0} }
+  .animate-ping { animation: ping 1.2s cubic-bezier(0,0,0.2,1) infinite; }
+
+  /* Scroll reveal */
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* Chart animation */
+  @keyframes drawLine {
+    from { stroke-dashoffset: 1200; }
+    to   { stroke-dashoffset: 0; }
+  }
+  .chart-line {
+    stroke-dasharray: 1200;
+    stroke-dashoffset: 1200;
+    animation: drawLine 2s ease forwards 0.5s;
+  }
+  .chart-line-dash {
+    stroke-dasharray: 8 4;
+    animation: drawLine 1.5s ease forwards 1.8s;
+  }
+
+  /* Hero floating cards */
+  @keyframes float1 { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-10px)} }
+  @keyframes float2 { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-6px)} }
+  @keyframes float3 { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-8px)} }
+  .float1 { animation: float1 4s ease-in-out infinite; }
+  .float2 { animation: float2 5s ease-in-out infinite 0.5s; }
+  .float3 { animation: float3 3.5s ease-in-out infinite 1s; }
+
+  /* Bar chart bars grow */
+  @keyframes growBar { from { transform: scaleY(0); transform-origin: bottom; } to { transform: scaleY(1); transform-origin: bottom; } }
+  .bar-animate { animation: growBar 1s ease forwards; }
+
+  /* Mobile menu transition */
+  #mobile-menu { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+  #mobile-menu.open { max-height: 400px; }
+
+  /* Upload modal */
+  #upload-modal { display: none; }
+  #upload-modal.active { display: flex; }
+
+  /* Drag zone */
+  .drag-over { border-color: #0da2e7 !important; background: rgba(13,162,231,0.05); }
+
+  /* Dark mode card */
+  .dark .card-white { background: #1e293b; border-color: #334155; }
+  .dark .card-white p.label { color: #94a3b8; }
+  .dark .card-white h4 { color: #f1f5f9; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; } 
+  ::-webkit-scrollbar-track { background: #f1f5f9; }
+  ::-webkit-scrollbar-thumb { background: #0da2e7; border-radius: 99px; }
+  .dark ::-webkit-scrollbar-track { background: #0f172a; }
+</style>
+</head>
+
+<body class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 selection:bg-primary/20 transition-colors duration-300">
+
+<!-- ═══════════════════ HEADER ═══════════════════ -->
+<header class="fixed top-0 w-full z-50 glass border-b border-primary/10 dark:border-primary/20">
+  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+
+    <!-- Logo -->
+    <div class="flex items-center gap-3">
+      <div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white shadow-lg shadow-primary/30">
+        <span class="material-symbols-outlined text-xl">analytics</span>
+      </div>
+      <h1 class="text-xl font-black tracking-tighter text-slate-900 dark:text-white">QUANT-AI</h1>
+    </div>
+
+    <!-- Desktop Nav -->
+    <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600 dark:text-slate-400">
+      <a class="hover:text-primary transition-colors" href="#features">Features</a>
+      <a class="hover:text-primary transition-colors" href="#workflow">How It Works</a>
+      <a class="hover:text-primary transition-colors" href="#dashboard">Dashboard</a>
+      <a class="hover:text-primary transition-colors" href="#use-cases">Use Cases</a>
+    </nav>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-3">
+      <!-- Dark mode toggle -->
+      <button id="theme-toggle" aria-label="Toggle theme"
+        class="size-10 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all">
+        <span class="material-symbols-outlined dark:hidden" id="icon-light">light_mode</span>
+        <span class="material-symbols-outlined hidden dark:block" id="icon-dark">dark_mode</span>
+      </button>
+
+      <!-- Auth CTAs -->
+      <a href="/auth"
+        class="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-primary transition-colors">
+        Log In
+      </a>
+      <a href="/auth"
+        class="px-4 py-2 text-sm font-bold bg-primary text-white rounded-lg hover:bg-primary-dark transition-all shadow-md shadow-primary/20">
+        Get Started
+      </a>
+
+      <!-- Mobile hamburger -->
+      <button id="hamburger" aria-label="Open menu"
+        class="md:hidden size-10 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-primary rounded-lg transition-all">
+        <span class="material-symbols-outlined" id="hamburger-icon">menu</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="md:hidden border-t border-primary/10 dark:border-primary/20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md">
+    <nav class="flex flex-col px-6 py-4 gap-4 text-sm font-semibold text-slate-700 dark:text-slate-300">
+      <a class="hover:text-primary transition-colors py-1" href="#features" onclick="closeMobileMenu()">Features</a>
+      <a class="hover:text-primary transition-colors py-1" href="#workflow" onclick="closeMobileMenu()">How It Works</a>
+      <a class="hover:text-primary transition-colors py-1" href="#dashboard" onclick="closeMobileMenu()">Dashboard</a>
+      <a class="hover:text-primary transition-colors py-1" href="#use-cases" onclick="closeMobileMenu()">Use Cases</a>
+      <a href="/auth" onclick="closeMobileMenu()" class="hover:text-primary transition-colors py-1">Log In</a>
+      <a href="/auth" onclick="closeMobileMenu()"
+        class="mt-2 px-4 py-3 bg-primary text-white rounded-lg font-bold text-center block">
+        Get Started Free
+      </a>
+    </nav>
+  </div>
+</header>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<section class="relative min-h-screen flex items-center px-6 overflow-hidden pt-16">
+  <!-- Background blobs -->
+  <div class="absolute inset-0 z-0 pointer-events-none">
+    <div class="absolute top-1/4 -left-20 w-96 h-96 bg-primary/10 rounded-full blur-[120px]"></div>
+    <div class="absolute bottom-1/4 -right-20 w-96 h-96 bg-primary/5 rounded-full blur-[120px]"></div>
+  </div>
+
+  <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center relative z-10 w-full py-24">
+
+    <!-- Left: Text -->
+    <div class="flex flex-col gap-8 reveal">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 w-fit">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+        </span>
+        <span class="text-xs font-bold text-primary tracking-wider uppercase mono">New: Predictive V2 Engine</span>
+      </div>
+
+      <h1 class="text-5xl md:text-7xl font-black leading-[1.1] tracking-tight text-slate-900 dark:text-white">
+        Turn Your Business Data into <span class="text-primary">AI-Powered</span> Insights
+      </h1>
+
+      <p class="text-lg text-slate-600 dark:text-slate-400 max-w-xl leading-relaxed">
+        Automated analysis, risk detection, and predictive modeling for your most complex datasets. Empower decision-making with machine learning that works instantly.
+      </p>
+
+      <div class="flex flex-wrap gap-4">
+        <a href="/auth"
+          class="px-8 py-4 bg-primary text-white rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-primary/20 hover:scale-105 hover:bg-primary-dark transition-all">
+          <span class="material-symbols-outlined">rocket_launch</span>
+          Get Started Free
+        </a>
+        <a href="#features"
+          class="px-8 py-4 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+          See Features
+        </a>
+      </div>
+
+      <!-- Trust indicators -->
+      <div class="flex flex-wrap gap-6 pt-2">
+        <div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+          <span class="material-symbols-outlined text-green-500 text-base">check_circle</span>
+          No credit card required
+        </div>
+        <div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+          <span class="material-symbols-outlined text-green-500 text-base">check_circle</span>
+          Supports up to 1GB
+        </div>
+        <div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+          <span class="material-symbols-outlined text-green-500 text-base">check_circle</span>
+          CSV, JSON, Parquet
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Live visualization mock -->
+    <div class="hidden lg:block reveal" style="animation-delay:0.2s">
+      <div class="w-full glass rounded-3xl glow-border p-5 relative shadow-xl shadow-primary/10">
+
+        <!-- Top bar -->
+        <div class="flex items-center gap-2 mb-5">
+          <div class="w-3 h-3 rounded-full bg-red-400"></div>
+          <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+          <div class="w-3 h-3 rounded-full bg-green-400"></div>
+          <span class="ml-3 text-xs mono text-slate-400 dark:text-slate-500">quant-ai · live analysis</span>
+        </div>
+
+        <!-- Stat cards row -->
+        <div class="grid grid-cols-3 gap-3 mb-4">
+          <div class="float1 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
+            <p class="text-[10px] text-slate-400 mono mb-1">REVENUE</p>
+            <p class="text-lg font-black text-slate-900 dark:text-white">$2.4M</p>
+            <p class="text-[10px] text-green-500 font-bold">▲ 12.5%</p>
+          </div>
+          <div class="float2 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm">
+            <p class="text-[10px] text-slate-400 mono mb-1">MARGIN</p>
+            <p class="text-lg font-black text-slate-900 dark:text-white">34.2%</p>
+            <p class="text-[10px] text-green-500 font-bold">▲ 2.1%</p>
+          </div>
+          <div class="float3 p-3 bg-primary/10 rounded-xl border border-primary/20">
+            <p class="text-[10px] text-primary mono mb-1">FORECAST</p>
+            <p class="text-lg font-black text-primary">+18.4%</p>
+            <p class="text-[10px] text-primary/70 font-bold">94% conf.</p>
+          </div>
+        </div>
+
+        <!-- SVG Chart -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 mb-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Sales + AI Forecast</span>
+            <div class="flex gap-3">
+              <span class="text-[10px] mono text-slate-400 flex items-center gap-1"><span class="inline-block w-4 h-0.5 bg-primary rounded"></span>Actual</span>
+              <span class="text-[10px] mono text-slate-400 flex items-center gap-1"><span class="inline-block w-4 border-t-2 border-dashed border-primary/50"></span>Forecast</span>
+            </div>
+          </div>
+          <svg viewBox="0 0 400 100" class="w-full h-20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Area fill -->
+            <defs>
+              <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#0da2e7" stop-opacity="0.18"/>
+                <stop offset="100%" stop-color="#0da2e7" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,75 L60,70 L120,80 L180,55 L240,60 L300,35 L300,100 L0,100 Z" fill="url(#areaGrad)"/>
+            <!-- Actual line -->
+            <path class="chart-line" d="M0,75 L60,70 L120,80 L180,55 L240,60 L300,35"
+              stroke="#0da2e7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Forecast dashed -->
+            <path class="chart-line-dash" d="M300,35 L340,22 L380,15"
+              stroke="#0da2e7" stroke-width="2" stroke-linecap="round" opacity="0.6"
+              stroke-dasharray="6 3" stroke-dashoffset="0"/>
+            <!-- Data points -->
+            <circle cx="0" cy="75" r="3" fill="#0da2e7"/>
+            <circle cx="60" cy="70" r="3" fill="#0da2e7"/>
+            <circle cx="120" cy="80" r="3" fill="#0da2e7"/>
+            <circle cx="180" cy="55" r="3" fill="#0da2e7"/>
+            <circle cx="240" cy="60" r="3" fill="#0da2e7"/>
+            <circle cx="300" cy="35" r="4" fill="#0da2e7" stroke="white" stroke-width="2"/>
+          </svg>
+          <div class="flex justify-between text-[9px] mono text-slate-400 mt-1">
+            <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun →</span>
+          </div>
+        </div>
+
+        <!-- Bar mini chart -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-3">
+            <p class="text-[10px] mono text-slate-400 mb-2">RISK SCORE</p>
+            <div class="flex items-end gap-1 h-10">
+              <div class="bar-animate flex-1 bg-green-400/70 rounded-sm" style="height:40%;animation-delay:0.3s"></div>
+              <div class="bar-animate flex-1 bg-green-400/70 rounded-sm" style="height:60%;animation-delay:0.4s"></div>
+              <div class="bar-animate flex-1 bg-amber-400/70 rounded-sm" style="height:75%;animation-delay:0.5s"></div>
+              <div class="bar-animate flex-1 bg-amber-400/70 rounded-sm" style="height:50%;animation-delay:0.6s"></div>
+              <div class="bar-animate flex-1 bg-red-400/70 rounded-sm" style="height:90%;animation-delay:0.7s"></div>
+              <div class="bar-animate flex-1 bg-red-400/70 rounded-sm" style="height:65%;animation-delay:0.8s"></div>
+            </div>
+          </div>
+          <div class="bg-primary/5 border border-primary/15 rounded-xl p-3 flex flex-col justify-between">
+            <p class="text-[10px] mono text-primary">AI INSIGHT</p>
+            <p class="text-[10px] text-slate-600 dark:text-slate-300 leading-snug mt-1">Churn risk ↑15% in Segment A. Act now.</p>
+            <div class="mt-2 h-1.5 rounded-full bg-primary/10">
+              <div class="h-full rounded-full bg-primary" style="width:94%"></div>
+            </div>
+            <p class="text-[9px] mono text-primary/60 mt-0.5">94% confidence</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══════════════════ ABOUT ═══════════════════ -->
+<section class="py-24 px-6 border-t border-primary/10 dark:border-primary/20">
+  <div class="max-w-4xl mx-auto text-center flex flex-col gap-6 reveal">
+    <h2 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">About QUANT-AI</h2>
+    <p class="text-lg text-slate-600 dark:text-slate-400 leading-relaxed">
+      QUANT-AI is an intelligent platform designed for automated data cleaning, interactive visualization, and high-accuracy predictive modeling. We bridge the gap between raw data and actionable business intelligence — allowing teams to forecast trends and mitigate risks without needing a PhD in Data Science.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<section class="py-24 px-6 bg-slate-50/80 dark:bg-slate-800/40" id="features">
+  <div class="max-w-7xl mx-auto">
+    <div class="mb-16 reveal">
+      <h2 class="text-4xl font-black text-slate-900 dark:text-white mb-4">Powerful Features</h2>
+      <p class="text-slate-600 dark:text-slate-400">Everything you need to master your data at scale.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="reveal feature-card p-7 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl group shadow-sm" style="animation-delay:0.0s">
+        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors">
+          <span class="material-symbols-outlined text-primary text-2xl">auto_fix_high</span>
+        </div>
+        <h3 class="text-base font-bold mb-2 text-slate-900 dark:text-white">Automated Cleaning</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Instantly fix missing values, duplicates, and outliers with our ML engine.</p>
+      </div>
+      <div class="reveal feature-card p-7 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl group shadow-sm" style="animation-delay:0.07s">
+        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors">
+          <span class="material-symbols-outlined text-primary text-2xl">dashboard_customize</span>
+        </div>
+        <h3 class="text-base font-bold mb-2 text-slate-900 dark:text-white">Descriptive Dashboards</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Beautiful real-time monitors that summarize key business metrics.</p>
+      </div>
+      <div class="reveal feature-card p-7 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl group shadow-sm" style="animation-delay:0.14s">
+        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors">
+          <span class="material-symbols-outlined text-primary text-2xl">query_stats</span>
+        </div>
+        <h3 class="text-base font-bold mb-2 text-slate-900 dark:text-white">ML Predictions</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Advanced ensemble models to forecast future sales and growth.</p>
+      </div>
+      <div class="reveal feature-card p-7 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl group shadow-sm" style="animation-delay:0.21s">
+        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors">
+          <span class="material-symbols-outlined text-primary text-2xl">report_problem</span>
+        </div>
+        <h3 class="text-base font-bold mb-2 text-slate-900 dark:text-white">Risk Detection</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Identify churn, fraud, and anomalies before they impact your bottom line.</p>
+      </div>
+      <div class="reveal feature-card p-7 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl group shadow-sm" style="animation-delay:0.28s">
+        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors">
+          <span class="material-symbols-outlined text-primary text-2xl">psychology</span>
+        </div>
+        <h3 class="text-base font-bold mb-2 text-slate-900 dark:text-white">AI Insight Generator</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Natural language narratives that explain exactly what your data means.</p>
+      </div>
+      <div class="reveal feature-card p-7 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl group shadow-sm" style="animation-delay:0.35s">
+        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors">
+          <span class="material-symbols-outlined text-primary text-2xl">lightbulb</span>
+        </div>
+        <h3 class="text-base font-bold mb-2 text-slate-900 dark:text-white">Recommendations</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Data-backed actionable steps to optimize business operations.</p>
+      </div>
+      <div class="reveal feature-card p-7 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl group shadow-sm" style="animation-delay:0.42s">
+        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors">
+          <span class="material-symbols-outlined text-primary text-2xl">bubble_chart</span>
+        </div>
+        <h3 class="text-base font-bold mb-2 text-slate-900 dark:text-white">Interactive Visuals</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Drill down into any data point with dynamic charting tools.</p>
+      </div>
+      <div class="reveal feature-card p-7 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl group shadow-sm" style="animation-delay:0.49s">
+        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-colors">
+          <span class="material-symbols-outlined text-primary text-2xl">database</span>
+        </div>
+        <h3 class="text-base font-bold mb-2 text-slate-900 dark:text-white">Multi-format Upload</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">Seamlessly connect CSV, JSON, Parquet, or SQL databases.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ HOW IT WORKS ═══════════════════ -->
+<section class="py-24 px-6 dark:bg-slate-900" id="workflow">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-4xl font-black text-slate-900 dark:text-white mb-16 text-center reveal">How It Works</h2>
+    <div class="relative reveal">
+      <div class="hidden lg:block absolute top-8 left-[8%] right-[8%] h-0.5 bg-primary/15 z-0"></div>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+        <!-- steps -->
+        <div class="flex flex-col items-center text-center gap-3 relative z-10">
+          <div class="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center font-black text-xl border-4 border-white dark:border-slate-900 shadow-lg shadow-primary/30">1</div>
+          <h4 class="font-bold text-slate-800 dark:text-slate-200">Upload</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Securely sync your raw datasets.</p>
+        </div>
+        <div class="flex flex-col items-center text-center gap-3 relative z-10">
+          <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 text-primary flex items-center justify-center font-black text-xl border-4 border-white dark:border-slate-900 shadow-sm">2</div>
+          <h4 class="font-bold text-slate-800 dark:text-slate-200">Processing</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Automated cleaning &amp; normalization.</p>
+        </div>
+        <div class="flex flex-col items-center text-center gap-3 relative z-10">
+          <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 text-primary flex items-center justify-center font-black text-xl border-4 border-white dark:border-slate-900 shadow-sm">3</div>
+          <h4 class="font-bold text-slate-800 dark:text-slate-200">Analysis</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Deep feature engineering.</p>
+        </div>
+        <div class="flex flex-col items-center text-center gap-3 relative z-10">
+          <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 text-primary flex items-center justify-center font-black text-xl border-4 border-white dark:border-slate-900 shadow-sm">4</div>
+          <h4 class="font-bold text-slate-800 dark:text-slate-200">Predictions</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Forecasting future trends.</p>
+        </div>
+        <div class="flex flex-col items-center text-center gap-3 relative z-10">
+          <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 text-primary flex items-center justify-center font-black text-xl border-4 border-white dark:border-slate-900 shadow-sm">5</div>
+          <h4 class="font-bold text-slate-800 dark:text-slate-200">Risk Detection</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Scanning for potential threats.</p>
+        </div>
+        <div class="flex flex-col items-center text-center gap-3 relative z-10">
+          <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 text-primary flex items-center justify-center font-black text-xl border-4 border-white dark:border-slate-900 shadow-sm">6</div>
+          <h4 class="font-bold text-slate-800 dark:text-slate-200">Insights</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Final actionable report.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ DASHBOARD ═══════════════════ -->
+<section class="py-24 px-6 bg-slate-50 dark:bg-slate-800/40" id="dashboard">
+  <div class="max-w-7xl mx-auto">
+    <!-- FIXED: no more nested h2/p tags -->
+    <div class="mb-12 text-center lg:text-left reveal">
+      <h2 class="text-4xl font-black text-slate-900 dark:text-white mb-4">The Command Center</h2>
+      <p class="text-slate-600 dark:text-slate-400">A detailed view into our AI-powered analytics dashboard.</p>
+    </div>
+
+    <div class="glass dark:bg-slate-900/60 rounded-3xl p-6 lg:p-10 glow-border reveal">
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+        <!-- Main content -->
+        <div class="lg:col-span-3 space-y-6">
+          <!-- KPI cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="p-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+              <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mono mb-1">Total Sales</p>
+              <h4 class="text-3xl font-bold text-slate-900 dark:text-white">$2,450,000</h4>
+              <p class="text-green-600 text-sm font-bold mt-2 flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">trending_up</span> +12.5%
+              </p>
+            </div>
+            <div class="p-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+              <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mono mb-1">Profit Margin</p>
+              <h4 class="text-3xl font-bold text-slate-900 dark:text-white">34.2%</h4>
+              <p class="text-green-600 text-sm font-bold mt-2 flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">trending_up</span> +2.1%
+              </p>
+            </div>
+            <div class="p-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+              <p class="text-slate-500 dark:text-slate-400 text-sm font-medium mono mb-1">Forecast Growth</p>
+              <h4 class="text-3xl font-bold text-primary">18.4%</h4>
+              <p class="text-primary/70 text-sm font-bold mt-2 mono">AI Confidence: 94%</p>
+            </div>
+          </div>
+
+          <!-- Chart -->
+          <div class="p-8 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm min-h-[300px]">
+            <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
+              <h5 class="text-lg font-bold text-slate-800 dark:text-slate-200">Sales Performance &amp; Predictions</h5>
+              <div class="flex gap-4">
+                <span class="flex items-center gap-2 text-xs mono text-slate-500">
+                  <span class="inline-block w-5 h-0.5 bg-primary rounded"></span> Actual
+                </span>
+                <span class="flex items-center gap-2 text-xs mono text-slate-500">
+                  <span class="inline-block w-5 border-t-2 border-dashed border-primary/50"></span> Forecast
+                </span>
+              </div>
+            </div>
+            <div class="w-full relative">
+              <svg viewBox="0 0 800 180" class="w-full h-48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#0da2e7" stop-opacity="0.15"/>
+                    <stop offset="100%" stop-color="#0da2e7" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <path d="M0,140 L100,130 L200,150 L300,110 L400,120 L500,80 L500,180 L0,180Z" fill="url(#chartGrad)"/>
+                <path class="chart-line" d="M0,140 L100,130 L200,150 L300,110 L400,120 L500,80"
+                  stroke="#0da2e7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                <path class="chart-line-dash" d="M500,80 L600,55 L700,65 L800,30"
+                  stroke="#0da2e7" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+                <circle cx="500" cy="80" r="5" fill="#0da2e7" stroke="white" stroke-width="2"/>
+              </svg>
+              <div class="flex justify-between text-[10px] mono text-slate-400 uppercase font-bold px-1 mt-1">
+                <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug →</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar panels -->
+        <div class="space-y-6">
+          <!-- Risk panel -->
+          <div class="p-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+            <h5 class="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-amber-500">warning</span>
+              Risk Panel
+            </h5>
+            <div class="space-y-4">
+              <div class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 rounded-xl">
+                <p class="text-red-600 text-xs font-bold mono uppercase tracking-wider mb-1">High Risk</p>
+                <p class="text-slate-700 dark:text-slate-300 text-sm">Churn probability increased by 15% in Segment A.</p>
+              </div>
+              <div class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-xl">
+                <p class="text-amber-600 text-xs font-bold mono uppercase tracking-wider mb-1">Medium Risk</p>
+                <p class="text-slate-700 dark:text-slate-300 text-sm">Inventory depletion predicted for SKU-904 in 14 days.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Insights -->
+          <div class="p-6 bg-primary/5 dark:bg-primary/10 border border-primary/15 dark:border-primary/20 rounded-2xl">
+            <h5 class="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined">auto_awesome</span>
+              AI Insights
+            </h5>
+            <div class="space-y-3 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              <p>Customer acquisition costs are stabilized. Recommend increasing Search spend by 10% based on seasonality trends.</p>
+              <div class="h-px bg-primary/10 w-full"></div>
+              <p>Your highest LTV customers are shifting toward mobile. Transition UI resources accordingly.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ USE CASES ═══════════════════ -->
+<section class="py-24 px-6 dark:bg-slate-900" id="use-cases">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-16 reveal">
+      <h2 class="text-4xl font-black text-slate-900 dark:text-white">Built for High-Growth Teams</h2>
+      <p class="text-slate-600 dark:text-slate-400 mt-4">Whatever your role, QUANT-AI makes data your superpower.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div class="reveal p-8 border border-slate-200 dark:border-slate-700 rounded-2xl hover:border-primary/50 transition-colors" style="animation-delay:0.0s">
+        <div class="text-primary font-bold mb-3">Retail &amp; E-commerce</div>
+        <p class="text-sm text-slate-600 dark:text-slate-400">Optimize inventory levels and personalize marketing campaigns with precise demand forecasting.</p>
+      </div>
+      <div class="reveal p-8 border border-slate-200 dark:border-slate-700 rounded-2xl hover:border-primary/50 transition-colors" style="animation-delay:0.07s">
+        <div class="text-primary font-bold mb-3">Finance &amp; Fintech</div>
+        <p class="text-sm text-slate-600 dark:text-slate-400">Detect fraudulent transactions in milliseconds and build robust credit risk models.</p>
+      </div>
+      <div class="reveal p-8 border border-slate-200 dark:border-slate-700 rounded-2xl hover:border-primary/50 transition-colors" style="animation-delay:0.14s">
+        <div class="text-primary font-bold mb-3">SaaS Startups</div>
+        <p class="text-sm text-slate-600 dark:text-slate-400">Understand user behavior patterns and accurately predict monthly recurring revenue churn.</p>
+      </div>
+      <div class="reveal p-8 border border-slate-200 dark:border-slate-700 rounded-2xl hover:border-primary/50 transition-colors" style="animation-delay:0.21s">
+        <div class="text-primary font-bold mb-3">Operations Managers</div>
+        <p class="text-sm text-slate-600 dark:text-slate-400">Identify bottlenecks in supply chains and automate routine reporting cycles.</p>
+      </div>
+      <div class="reveal p-8 border border-slate-200 dark:border-slate-700 rounded-2xl hover:border-primary/50 transition-colors" style="animation-delay:0.28s">
+        <div class="text-primary font-bold mb-3">Data Analysts</div>
+        <p class="text-sm text-slate-600 dark:text-slate-400">Skip the grunt work of cleaning data and jump straight to high-value modeling tasks.</p>
+      </div>
+      <div class="reveal p-8 bg-primary rounded-2xl flex flex-col items-center justify-center text-center text-white gap-4" style="animation-delay:0.35s">
+        <h4 class="font-bold text-xl">Your Industry Next?</h4>
+        <button class="px-6 py-2 bg-white text-primary rounded-lg font-bold hover:bg-slate-50 transition-colors">Contact Sales</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ TECH STACK ═══════════════════ -->
+<section class="py-24 px-6 border-t border-slate-200 dark:border-slate-800">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-12 reveal">
+    <div class="max-w-md">
+      <h2 class="text-3xl font-bold mb-4 dark:text-white">Enterprise-Grade Stack</h2>
+      <p class="text-slate-600 dark:text-slate-400 leading-relaxed">Our infrastructure is built on the most reliable technologies in the data ecosystem to ensure speed, security, and scalability.</p>
+    </div>
+    <div class="flex flex-wrap justify-center gap-10 opacity-50 hover:opacity-80 transition-opacity">
+      <div class="flex items-center gap-2 font-black text-xl dark:text-white"><span class="material-symbols-outlined text-primary">terminal</span> Python</div>
+      <div class="flex items-center gap-2 font-black text-xl dark:text-white"><span class="material-symbols-outlined text-primary">neurology</span> PyTorch</div>
+      <div class="flex items-center gap-2 font-black text-xl dark:text-white"><span class="material-symbols-outlined text-primary">database</span> PostgreSQL</div>
+      <div class="flex items-center gap-2 font-black text-xl dark:text-white"><span class="material-symbols-outlined text-primary">monitoring</span> SciPy</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ CTA ═══════════════════ -->
+<section class="py-32 px-6 relative overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/5"></div>
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-primary/10 blur-[100px] rounded-full pointer-events-none"></div>
+  <div class="max-w-4xl mx-auto text-center relative z-10 space-y-8 reveal">
+    <h2 class="text-4xl md:text-6xl font-black text-slate-900 dark:text-white">Ready to see the future?</h2>
+    <p class="text-xl text-slate-600 dark:text-slate-400">Upload your dataset now and let our AI generate your first report in minutes.</p>
+    <div class="flex justify-center">
+      <a href="/auth"
+        class="px-12 py-5 bg-primary text-white rounded-2xl font-black text-xl shadow-xl shadow-primary/20 hover:scale-105 hover:bg-primary-dark transition-all inline-block">
+        Get Started for Free
+      </a>
+    </div>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mono">No credit card required · Supports up to 1GB per dataset</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="py-12 px-6 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+    <div class="flex items-center gap-3">
+      <div class="size-6 bg-primary rounded-md flex items-center justify-center text-white">
+        <span class="material-symbols-outlined text-base">analytics</span>
+      </div>
+      <span class="font-black text-slate-900 dark:text-white">QUANT-AI</span>
+    </div>
+    <div class="flex flex-wrap justify-center gap-6 text-sm text-slate-500 dark:text-slate-400">
+      <a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+      <a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+      <a class="hover:text-primary transition-colors" href="#">Support</a>
+      <a class="hover:text-primary transition-colors" href="#">Docs</a>
+    </div>
+    <!-- FIXED: updated to 2025 -->
+    <div class="text-xs text-slate-500 dark:text-slate-500 mono">© 2025 QUANT-AI Analytics Inc.</div>
+  </div>
+</footer>
+
+<!-- ═══════════════════ UPLOAD MODAL ═══════════════════ -->
+<div id="upload-modal"
+  class="fixed inset-0 z-[100] items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+  onclick="handleModalBackdrop(event)">
+  <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg p-8 relative" id="modal-box">
+
+    <!-- Close -->
+    <button onclick="closeUploadModal()"
+      class="absolute top-4 right-4 size-9 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+
+    <h3 class="text-2xl font-black text-slate-900 dark:text-white mb-2">Upload Your Dataset</h3>
+    <p class="text-slate-500 dark:text-slate-400 text-sm mb-6">Supports CSV, JSON, Parquet. Max 1GB.</p>
+
+    <!-- Drop zone -->
+    <div id="drop-zone"
+      class="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-10 text-center cursor-pointer hover:border-primary transition-colors"
+      onclick="document.getElementById('file-input').click()"
+      ondragover="handleDragOver(event)"
+      ondragleave="handleDragLeave(event)"
+      ondrop="handleDrop(event)">
+      <span class="material-symbols-outlined text-primary text-5xl mb-3 block">cloud_upload</span>
+      <p class="font-bold text-slate-700 dark:text-slate-200 mb-1">Click to browse or drag &amp; drop</p>
+      <p class="text-xs text-slate-400 mono">.csv · .json · .parquet · .xlsx</p>
+    </div>
+
+    <input type="file" id="file-input" class="hidden" accept=".csv,.json,.parquet,.xlsx"
+      onchange="handleFileSelect(event)"/>
+
+    <!-- File preview -->
+    <div id="file-preview" class="hidden mt-4 p-4 bg-primary/5 border border-primary/15 rounded-xl flex items-center gap-3">
+      <span class="material-symbols-outlined text-primary text-2xl">description</span>
+      <div class="flex-1 min-w-0">
+        <p id="file-name" class="font-bold text-slate-800 dark:text-slate-200 text-sm truncate"></p>
+        <p id="file-size" class="text-xs text-slate-400 mono"></p>
+      </div>
+      <button onclick="clearFile()" class="text-slate-400 hover:text-red-500 transition-colors">
+        <span class="material-symbols-outlined text-lg">delete</span>
+      </button>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="flex gap-3 mt-6">
+      <button onclick="closeUploadModal()"
+        class="flex-1 py-3 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+        Cancel
+      </button>
+      <button id="analyze-btn" onclick="startAnalysis()"
+        class="flex-1 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+        Analyze Dataset
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ JAVASCRIPT ═══════════════════ -->
+<script>
+  // ── Dark mode ──────────────────────────────────────────
+  const html = document.documentElement;
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    html.classList.add('dark');
+  }
+  document.getElementById('theme-toggle').addEventListener('click', () => {
+    html.classList.toggle('dark');
+    localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
+  });
+
+  // ── Mobile menu ────────────────────────────────────────
+  const mobileMenu = document.getElementById('mobile-menu');
+  const hamburgerIcon = document.getElementById('hamburger-icon');
+  document.getElementById('hamburger').addEventListener('click', () => {
+    const isOpen = mobileMenu.classList.toggle('open');
+    hamburgerIcon.textContent = isOpen ? 'close' : 'menu';
+  });
+  function closeMobileMenu() {
+    mobileMenu.classList.remove('open');
+    hamburgerIcon.textContent = 'menu';
+  }
+
+  // ── Upload modal ───────────────────────────────────────
+  function openUploadModal() {
+    document.getElementById('upload-modal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeUploadModal() {
+    document.getElementById('upload-modal').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  function handleModalBackdrop(e) {
+    if (e.target === document.getElementById('upload-modal')) closeUploadModal();
+  }
+
+  // ── File handling ──────────────────────────────────────
+  let selectedFile = null;
+
+  function showFile(file) {
+    selectedFile = file;
+    document.getElementById('file-name').textContent = file.name;
+    document.getElementById('file-size').textContent = formatBytes(file.size);
+    document.getElementById('file-preview').classList.remove('hidden');
+    document.getElementById('drop-zone').classList.add('hidden');
+    document.getElementById('analyze-btn').disabled = false;
+  }
+  function clearFile() {
+    selectedFile = null;
+    document.getElementById('file-input').value = '';
+    document.getElementById('file-preview').classList.add('hidden');
+    document.getElementById('drop-zone').classList.remove('hidden');
+    document.getElementById('analyze-btn').disabled = true;
+  }
+  function formatBytes(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+    return (b/1048576).toFixed(2) + ' MB';
+  }
+  function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) showFile(file);
+  }
+  function handleDragOver(e) {
+    e.preventDefault();
+    document.getElementById('drop-zone').classList.add('drag-over');
+  }
+  function handleDragLeave(e) {
+    document.getElementById('drop-zone').classList.remove('drag-over');
+  }
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('drop-zone').classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) showFile(file);
+  }
+
+  // ── Analyze action (hook up to your API here) ──────────
+  function startAnalysis() {
+    if (!selectedFile) return;
+    const btn = document.getElementById('analyze-btn');
+    btn.textContent = 'Analyzing...';
+    btn.disabled = true;
+    // TODO: Replace with your FastAPI call:
+    // const formData = new FormData();
+    // formData.append('file', selectedFile);
+    // fetch('http://your-api.com/predict', { method: 'POST', body: formData })
+    //   .then(r => r.json()).then(data => { /* render results */ });
+    setTimeout(() => {
+      btn.textContent = 'Analyze Dataset';
+      btn.disabled = false;
+      closeUploadModal();
+      alert('✅ Dataset received! Connect your FastAPI backend to show real results.');
+    }, 2000);
+  }
+
+  // ── Scroll reveal ──────────────────────────────────────
+  const revealEls = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  revealEls.forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
