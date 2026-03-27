@@ -56,4 +56,10 @@ An AI-powered data analysis and prediction system that allows users to upload da
 cd backend
 uvicorn app.main:app --reload
 
+## 👨‍💻 Author
+
+Mohammed Saffan 
+GitHub: https://github.com/Mo-create-git
+
+
 
